@@ -1,0 +1,1 @@
+import{c as s}from"./index--atX_XUv.js";function p(e,o=10){const[a,c]=s.useState(1),[t,r]=s.useState(o),g=Math.max(1,Math.ceil(e.length/t)),u=s.useMemo(()=>{const n=(a-1)*t;return e.slice(n,n+t)},[e,a,t]);return{page:a,pageSize:t,totalPages:g,paginatedItems:u,setPage:c,setPageSize:r}}export{p as u};

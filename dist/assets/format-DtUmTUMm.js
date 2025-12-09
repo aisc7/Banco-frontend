@@ -1,0 +1,1 @@
+function m(r){return r==null||Number.isNaN(Number(r))?"-":new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(r)}function o(r){if(!r)return"-";const t=r.match(/^(\d{4})-(\d{2})-(\d{2})/);if(!t)return r||"-";const[,n,c,i]=t;return`${i}/${c}/${n}`}export{m as a,o as f};
