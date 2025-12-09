@@ -31,14 +31,17 @@ export const PrestamosListPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
-  const isEmpleadoOrAdmin = user?.role === 'EMPLEADO' || user?.role === 'ADMIN';
-  const isPrestatario = user?.role === 'PRESTATARIO';
+  const role = user?.role;
+  const isPrestatario = role === 'PRESTATARIO';
+  const isEmpleadoOrAdmin = role === 'EMPLEADO' || role === 'ADMIN';
 
   useEffect(() => {
     if (isEmpleadoOrAdmin) {
       fetchAll().catch(() => undefined);
+    } else if (isPrestatario && user?.id_prestatario != null) {
+      fetchByPrestatario(user.id_prestatario).catch(() => undefined);
     }
-  }, [fetchAll, isEmpleadoOrAdmin]);
+  }, [fetchAll, fetchByPrestatario, isEmpleadoOrAdmin, isPrestatario, user]);
 
   const filteredItems = useMemo(() => {
     if (isEmpleadoOrAdmin) {
@@ -48,7 +51,7 @@ export const PrestamosListPage: React.FC = () => {
         return matchesEstado && matchesCedula;
       });
     }
-    // Para prestatarios usamos directamente los préstamos cargados para su cédula.
+    // Para prestatarios usamos directamente los préstamos cargados para el prestatario autenticado.
     return prestamosPorPrestatario;
   }, [items, prestamosPorPrestatario, estadoFilter, cedulaFilter, isEmpleadoOrAdmin]);
 
@@ -103,15 +106,6 @@ export const PrestamosListPage: React.FC = () => {
         )}
         {isPrestatario && (
           <Box display="flex" gap={1} flexWrap="wrap">
-            <TextField
-              size="small"
-              label="Cédula"
-              value={cedulaFilter}
-              onChange={(e) => setCedulaFilter(e.target.value)}
-            />
-            <AppButton onClick={handleBuscarPorCedula} startIcon={<RefreshIcon />}>
-              Buscar
-            </AppButton>
             <AppButton startIcon={<AddIcon />} onClick={() => navigate('/prestamos/nuevo')}>
               Solicitar nuevo préstamo
             </AppButton>

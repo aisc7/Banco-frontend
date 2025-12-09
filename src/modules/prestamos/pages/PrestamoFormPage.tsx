@@ -27,6 +27,9 @@ export const PrestamoFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { create, loading, error: serverError } = usePrestamosStore();
   const user = useAuthStore((s) => s.user);
+  const role = user?.role;
+  const isPrestatario = role === 'PRESTATARIO';
+  const isEmpleado = role === 'EMPLEADO' || role === 'ADMIN';
 
   const {
     register,
@@ -42,18 +45,21 @@ export const PrestamoFormPage: React.FC = () => {
   });
 
   const onSubmit = async (values: PrestamoFormValues) => {
-    const created = await create({
-      id_prestatario: values.id_prestatario,
+    const basePayload: any = {
       monto: Number(values.monto),
-      nro_cuotas: Number(values.nro_cuotas),
-      tipo_interes: values.tipo_interes
-    });
+      nro_cuotas: Number(values.nro_cuotas)
+    };
+
+    if (!isPrestatario) {
+      basePayload.tipo_interes = values.tipo_interes;
+      basePayload.id_prestatario = values.id_prestatario;
+    }
+
+    const created = await create(basePayload);
     if (created) {
       navigate(`/prestamos/${created.id}`);
     }
   };
-
-  const isEmpleado = user?.role === 'EMPLEADO' || user?.role === 'ADMIN';
 
   return (
     <Box>
@@ -127,44 +133,46 @@ export const PrestamoFormPage: React.FC = () => {
             min: { value: 1, message: 'Debe haber al menos 1 cuota' }
           })}
         />
-        <TextField
-          select
-          label="Tipo de interés"
-          fullWidth
-          error={!!errors.tipo_interes}
-          helperText={
-            errors.tipo_interes?.message ??
-            'Selecciona el tipo de interés según el nivel de riesgo y el plazo deseado.'
-          }
-          InputProps={{
-            endAdornment: (
-              <Tooltip
-                title={
-                  <>
-                    <Typography variant="body2">
-                      <strong>BAJA</strong>: menor tasa, cuotas más bajas y plazos más largos.
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>MEDIA</strong>: equilibrio entre monto total y plazo.
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>ALTA</strong>: mayor tasa, cuotas más altas y plazos más cortos.
-                    </Typography>
-                  </>
-                }
-              >
-                <InfoOutlinedIcon fontSize="small" sx={{ cursor: 'help' }} />
-              </Tooltip>
-            )
-          }}
-          {...register('tipo_interes', {
-            required: 'El tipo de interés es requerido'
-          })}
-        >
-          <MenuItem value="BAJA">BAJA</MenuItem>
-          <MenuItem value="MEDIA">MEDIA</MenuItem>
-          <MenuItem value="ALTA">ALTA</MenuItem>
-        </TextField>
+        {!isPrestatario && (
+          <TextField
+            select
+            label="Tipo de interés"
+            fullWidth
+            error={!!errors.tipo_interes}
+            helperText={
+              errors.tipo_interes?.message ??
+              'Selecciona el tipo de interés según el nivel de riesgo y el plazo deseado.'
+            }
+            InputProps={{
+              endAdornment: (
+                <Tooltip
+                  title={
+                    <>
+                      <Typography variant="body2">
+                        <strong>BAJA</strong>: menor tasa, cuotas más bajas y plazos más largos.
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>MEDIA</strong>: equilibrio entre monto total y plazo.
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>ALTA</strong>: mayor tasa, cuotas más altas y plazos más cortos.
+                      </Typography>
+                    </>
+                  }
+                >
+                  <InfoOutlinedIcon fontSize="small" sx={{ cursor: 'help' }} />
+                </Tooltip>
+              )
+            }}
+            {...register('tipo_interes', {
+              required: !isPrestatario ? 'El tipo de interés es requerido' : false
+            })}
+          >
+            <MenuItem value="BAJA">BAJA</MenuItem>
+            <MenuItem value="MEDIA">MEDIA</MenuItem>
+            <MenuItem value="ALTA">ALTA</MenuItem>
+          </TextField>
+        )}
 
         <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
           <AppButton

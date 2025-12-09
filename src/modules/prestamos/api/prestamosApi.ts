@@ -17,7 +17,7 @@ export interface CreatePrestamoDto {
   id_prestatario?: number;
   monto: number;
   nro_cuotas: number;
-  tipo_interes: 'BAJA' | 'MEDIA' | 'ALTA';
+  tipo_interes?: 'BAJA' | 'MEDIA' | 'ALTA';
   id_empleado?: number | null;
 }
 
