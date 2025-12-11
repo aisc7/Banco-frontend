@@ -60,6 +60,7 @@ export const MainLayout: React.FC = () => {
       return [
         { to: '/cliente/inicio', label: 'Inicio', icon: <HomeIcon /> },
         { to: '/prestamos', label: 'Mis préstamos', icon: <AccountBalanceIcon /> },
+        { to: '/mis-cuotas', label: 'Mis cuotas', icon: <RuleIcon /> },
         { to: '/solicitudes', label: 'Solicitudes', icon: <RuleIcon /> },
         { to: '/notificaciones', label: 'Mis notificaciones', icon: <NotificationsIcon /> },
         { to: '/cliente/perfil', label: 'Mi perfil', icon: <AccountCircleIcon /> },
@@ -71,6 +72,7 @@ export const MainLayout: React.FC = () => {
     const items = [
       { to: '/prestatarios', label: 'Prestatarios', icon: <PeopleIcon /> },
       { to: '/prestamos', label: 'Préstamos', icon: <AccountBalanceIcon /> },
+      { to: '/cuotas-empleado', label: 'Cuotas', icon: <RuleIcon /> },
       { to: '/solicitudes/admin', label: 'Solicitudes', icon: <RuleIcon /> },
       { to: '/reportes/resumen-prestamos', label: 'Reportes', icon: <BarChartIcon /> },
       { to: '/notificaciones', label: 'Notificaciones', icon: <NotificationsIcon /> },
@@ -80,7 +82,7 @@ export const MainLayout: React.FC = () => {
     ];
 
     if (isAdmin) {
-      items.splice(5, 0, { to: '/empleados', label: 'Empleados', icon: <BadgeIcon /> });
+      items.splice(6, 0, { to: '/empleados', label: 'Empleados', icon: <BadgeIcon /> });
     }
 
     return items;

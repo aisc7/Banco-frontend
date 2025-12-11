@@ -1,3 +1,27 @@
+// Obtener cuotas por préstamo
+export async function getCuotasByPrestamo(idPrestamo: number, token: string) {
+  const response = await httpClient.get<ApiResponse<any[]>>(`/api/cuotas/prestamo/${idPrestamo}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!response.data.ok) {
+    throw new Error(response.data.error || 'Error al obtener cuotas del préstamo');
+  }
+  return response.data;
+}
+
+// Obtener resumen de cuotas de un prestatario
+export async function getResumenCuotas(id: number | string, token: string) {
+  const response = await httpClient.get<ApiResponse<any[]>>(`/api/cuotas/prestatarios/${id}/resumen-cuotas`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!response.data.ok) {
+    throw new Error(response.data.error || 'Error al obtener resumen de cuotas');
+  }
+  return response.data;
+}
+
+// Alias para registrar pago de cuota
+export const pagarCuota = registrarPagoCuota;
 import { httpClient } from '../../../shared/api/httpClient';
 import { Cuota, mapCuotasFromApi } from '../domain/cuota.model';
 

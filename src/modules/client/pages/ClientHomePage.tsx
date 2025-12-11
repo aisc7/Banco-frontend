@@ -39,6 +39,9 @@ const ClientHomePage: React.FC = () => {
               Visualiza las cuotas próximas a vencer, identifica cuotas en mora y realiza pagos
               cuando corresponda.
             </Typography>
+            <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={() => navigate('/mis-cuotas')}>
+              Ver mis cuotas
+            </Button>
           </AppCard>
         </Grid>
         <Grid item xs={12} md={4}>

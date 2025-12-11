@@ -1,1 +1,0 @@
-import{c as t}from"./index--atX_XUv.js";function u(){const[n,e]=t.useState({open:!1,message:""}),[o,s]=t.useState(null),a=(l,m)=>{e({open:!0,message:l}),s(()=>m)},r=()=>{o&&o(),e({open:!1,message:""}),s(null)},c=()=>{e({open:!1,message:""}),s(null)};return{open:n.open,message:n.message,ask:a,confirm:r,cancel:c}}export{u};

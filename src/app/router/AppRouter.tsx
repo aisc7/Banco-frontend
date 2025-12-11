@@ -1,4 +1,7 @@
 import React, { Suspense, lazy } from 'react';
+
+const MisCuotasPage = lazy(() => import('../../modules/cuotas/pages/MisCuotasPage'));
+const CuotasEmpleadoPage = lazy(() => import('../../modules/cuotas/pages/CuotasEmpleadoPage'));
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { MainLayout } from '../../shared/components/Layout/MainLayout';
 import { FullPageLoader } from '../../shared/components/FullPageLoader';
@@ -279,7 +282,46 @@ export const AppRouter: React.FC = () => {
           }
         />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Route
+        path="mis-cuotas"
+        element={
+          <RequireAuth>
+            <MainLayout />
+          </RequireAuth>
+        }
+      >
+        <Route
+          index
+          element={
+            <RequireRole allowedRoles={['PRESTATARIO']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <MisCuotasPage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+      </Route>
+
+      <Route
+        path="cuotas-empleado"
+        element={
+          <RequireAuth>
+            <MainLayout />
+          </RequireAuth>
+        }
+      >
+        <Route
+          index
+          element={
+            <RequireRole allowedRoles={['EMPLEADO', 'ADMIN']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <CuotasEmpleadoPage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+      </Route>
+	  <Route path="*" element={<Navigate to="/" replace />} />
+	</Routes>
   );
-};
+}
