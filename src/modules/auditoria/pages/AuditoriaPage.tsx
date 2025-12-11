@@ -1,96 +1,123 @@
-import React, { useState } from 'react';
-import { Box, Typography, TextField } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
-import { useForm } from 'react-hook-form';
-import { AppButton } from '../../../shared/components/ui/AppButton';
-import { registrarAuditoria } from '../api/auditoriaApi';
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, Button, CircularProgress } from '@mui/material';
+import { getAuditoriaLogs, AuditoriaLog } from '../api/auditoriaApi';
 
-interface AuditoriaFormValues {
+interface FiltroAuditoria {
   usuario: string;
-  ip?: string;
-  dominio?: string;
-  tabla?: string;
-  operacion?: string;
-  descripcion?: string;
+  operacion: string;
+  tabla: string;
 }
 
 export const AuditoriaPage: React.FC = () => {
-  const [lastId, setLastId] = useState<number | null>(null);
+  const [logs, setLogs] = useState<AuditoriaLog[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filtros, setFiltros] = useState<FiltroAuditoria>({ usuario: '', operacion: '', tabla: '' });
+  const [limit] = useState<number>(100);
+  const [offset] = useState<number>(0);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors }
-  } = useForm<AuditoriaFormValues>({
-    defaultValues: {
-      usuario: '',
-      ip: '',
-      dominio: '',
-      tabla: '',
-      operacion: '',
-      descripcion: ''
+  const fetchLogs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await getAuditoriaLogs({
+        usuario: filtros.usuario || undefined,
+        operacion: filtros.operacion || undefined,
+        tabla: filtros.tabla || undefined,
+        limit,
+        offset,
+      });
+      setLogs(result);
+    } catch (err: any) {
+      setError(err.message || 'Error al obtener los registros');
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  const onSubmit = async (values: AuditoriaFormValues) => {
-    const result = await registrarAuditoria(values);
-    setLastId(result.id_audit);
-    reset({ ...values, descripcion: '' });
+  useEffect(() => {
+    fetchLogs();
+    // eslint-disable-next-line
+  }, []);
+
+  const handleFiltroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  };
+
+  const handleBuscar = () => {
+    fetchLogs();
   };
 
   return (
     <Box>
       <Typography variant="h5" mb={2}>
-        Auditoría manual
+        Auditoría
       </Typography>
-      <Typography variant="body2" mb={2}>
-        El backend no expone un endpoint para consultar el log completo de auditoría. Esta sección
-        permite registrar manualmente eventos usando los procedimientos existentes.
-      </Typography>
-
-      <Box
-        component="form"
-        onSubmit={handleSubmit(onSubmit)}
-        maxWidth={600}
-        display="flex"
-        flexDirection="column"
-        gap={2}
-      >
+      <Box display="flex" gap={2} mb={2}>
         <TextField
           label="Usuario"
-          fullWidth
-          error={!!errors.usuario}
-          helperText={errors.usuario?.message}
-          {...register('usuario', { required: 'El usuario es requerido' })}
+          name="usuario"
+          value={filtros.usuario}
+          onChange={handleFiltroChange}
         />
-        <TextField label="IP" fullWidth {...register('ip')} />
-        <TextField label="Dominio" fullWidth {...register('dominio')} />
-        <TextField label="Tabla afectada" fullWidth {...register('tabla')} />
-        <TextField label="Operación" fullWidth {...register('operacion')} />
         <TextField
-          label="Descripción"
-          fullWidth
-          multiline
-          minRows={2}
-          {...register('descripcion')}
+          label="Operación"
+          name="operacion"
+          value={filtros.operacion}
+          onChange={handleFiltroChange}
         />
-
-        <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
-          <AppButton startIcon={<SaveIcon />} type="submit">
-            Registrar evento
-          </AppButton>
-        </Box>
+        <TextField
+          label="Tabla"
+          name="tabla"
+          value={filtros.tabla}
+          onChange={handleFiltroChange}
+        />
+        <Button variant="contained" onClick={handleBuscar} disabled={loading}>
+          Buscar
+        </Button>
       </Box>
-
-      {lastId !== null && (
-        <Typography variant="body2" mt={2}>
-          Último id_audit registrado: {lastId}
-        </Typography>
+      {loading ? (
+        <CircularProgress />
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Usuario</TableCell>
+                <TableCell>IP</TableCell>
+                <TableCell>Dominio</TableCell>
+                <TableCell>Fecha Entrada</TableCell>
+                <TableCell>Fecha Salida</TableCell>
+                <TableCell>Tabla</TableCell>
+                <TableCell>Operación</TableCell>
+                <TableCell>Duración</TableCell>
+                <TableCell>Descripción</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {logs.map((log) => (
+                <TableRow key={log.ID_AUDIT_PK}>
+                  <TableCell>{log.ID_AUDIT_PK}</TableCell>
+                  <TableCell>{log.USUARIO}</TableCell>
+                  <TableCell>{log.IP}</TableCell>
+                  <TableCell>{log.DOMINIO}</TableCell>
+                  <TableCell>{log.FECHA_ENTRADA}</TableCell>
+                  <TableCell>{log.FECHA_SALIDA || '-'}</TableCell>
+                  <TableCell>{log.TABLA_AFECTADA}</TableCell>
+                  <TableCell>{log.OPERACION}</TableCell>
+                  <TableCell>{log.DURACION_SESION || '-'}</TableCell>
+                  <TableCell>{log.DESCRIPCION}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </Box>
   );
 };
 
 export default AuditoriaPage;
-
