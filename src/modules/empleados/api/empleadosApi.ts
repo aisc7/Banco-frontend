@@ -79,3 +79,15 @@ export async function deleteEmpleado(id: number): Promise<void> {
     throw new Error(response.data.message || 'Error al eliminar empleado');
   }
 }
+
+/**
+ * GET /api/empleados/me
+ * Descripción: Obtiene el perfil del empleado autenticado usando id_empleado del token.
+ */
+export async function getEmpleadoMe(): Promise<Empleado> {
+  const response = await httpClient.get<ApiResponse<any>>('/api/empleados/me');
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Error al cargar el perfil del empleado');
+  }
+  return mapEmpleadoFromApi(response.data.data);
+}

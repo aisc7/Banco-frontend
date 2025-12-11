@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -16,8 +16,19 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { AppButton } from '../../../shared/components/ui/AppButton';
 import { AppTable } from '../../../shared/components/ui/AppTable';
 import { Prestamo, CuotaResumen } from '../domain/prestamo.model';
-import { getPrestamoById, getPrestamosPorPrestatario } from '../api/prestamosApi';
+import { getPrestamoById, getPrestamosPorPrestatario, createRefinanciacion } from '../api/prestamosApi';
 import { formatCurrencyCOP, formatDate } from '../../../shared/utils/format';
+import { useAuthStore } from '../../auth/store/useAuthStore';
+import { useNotificationStore } from '../../../app/store/useNotificationStore';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  TextField
+} from '@mui/material';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 
 export const PrestamoDetailPage: React.FC = () => {
   const { id } = useParams();
@@ -27,27 +38,60 @@ export const PrestamoDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [prestamosDelPrestatario, setPrestamosDelPrestatario] = useState<Prestamo[]>([]);
+  const user = useAuthStore((s) => s.user);
+  const { enqueue } = useNotificationStore();
+  const [refDialogOpen, setRefDialogOpen] = useState(false);
+  const [refNroCuotas, setRefNroCuotas] = useState<string>('');
+  const [refLoading, setRefLoading] = useState(false);
+
+  const isEmpleado = user?.role === 'EMPLEADO' || user?.role === 'ADMIN';
+
+  const loadPrestamo = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(undefined);
+    try {
+      const p = await getPrestamoById(Number(id));
+      setPrestamo(p);
+      // Cargar cuotas vía resumen por prestatario y filtrar por préstamo
+      const result = await getPrestamosPorPrestatario(p.idPrestatario);
+      setCuotas(result.cuotas.filter((c) => c.idPrestamo === p.id));
+      setPrestamosDelPrestatario(result.prestamos);
+    } catch (err: any) {
+      setError(err.message ?? 'Error al cargar préstamo');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!id) return;
-      setLoading(true);
-      setError(undefined);
-      try {
-        const p = await getPrestamoById(Number(id));
-        setPrestamo(p);
-        // Cargar cuotas vía resumen por prestatario y filtrar por préstamo
-        const result = await getPrestamosPorPrestatario(p.idPrestatario);
-        setCuotas(result.cuotas.filter((c) => c.idPrestamo === p.id));
-        setPrestamosDelPrestatario(result.prestamos);
-      } catch (err: any) {
-        setError(err.message ?? 'Error al cargar préstamo');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load().catch(() => undefined);
-  }, [id]);
+    loadPrestamo().catch(() => undefined);
+  }, [loadPrestamo]);
+
+  const handleRefinanciar = () => {
+    setRefNroCuotas('');
+    setRefDialogOpen(true);
+  };
+
+  const handleConfirmRefinanciacion = async () => {
+    if (!prestamo) return;
+    const n = Number(refNroCuotas);
+    if (!Number.isInteger(n) || n <= 0) {
+      enqueue('El nuevo número de cuotas debe ser un entero positivo.', 'error');
+      return;
+    }
+    setRefLoading(true);
+    try {
+      await createRefinanciacion(prestamo.id, { nro_cuotas: n });
+      enqueue('Refinanciación registrada correctamente. Se recalcularon las cuotas del préstamo.', 'success');
+      setRefDialogOpen(false);
+      await loadPrestamo();
+    } catch {
+      // El interceptor ya muestra el error de negocio.
+    } finally {
+      setRefLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -102,12 +146,22 @@ export const PrestamoDetailPage: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5">Préstamo #{prestamo.id}</Typography>
-        <AppButton
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/prestamos')}
-        >
-          Volver al listado
-        </AppButton>
+        <Box display="flex" gap={1}>
+          {isEmpleado && (
+            <AppButton
+              startIcon={<AutorenewIcon />}
+              onClick={handleRefinanciar}
+            >
+              Refinanciar
+            </AppButton>
+          )}
+          <AppButton
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/prestamos')}
+          >
+            Volver al listado
+          </AppButton>
+        </Box>
       </Box>
 
       <Stack direction="row" spacing={2} mb={2} flexWrap="wrap">
@@ -197,6 +251,38 @@ export const PrestamoDetailPage: React.FC = () => {
           data={cuotas as any}
         />
       )}
+
+      <Dialog open={refDialogOpen} onClose={() => !refLoading && setRefDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Refinanciar préstamo</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Ingresa el nuevo número de cuotas para refinanciar este préstamo. El backend recalculará el
+            cronograma y generará una solicitud de refinanciación registrada en la auditoría.
+          </DialogContentText>
+          <TextField
+            label="Nuevo número de cuotas"
+            type="number"
+            fullWidth
+            value={refNroCuotas}
+            onChange={(e) => setRefNroCuotas(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <AppButton
+            variant="outlined"
+            onClick={() => setRefDialogOpen(false)}
+            disabled={refLoading}
+          >
+            Cancelar
+          </AppButton>
+          <AppButton
+            onClick={handleConfirmRefinanciacion}
+            disabled={refLoading}
+          >
+            Confirmar
+          </AppButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

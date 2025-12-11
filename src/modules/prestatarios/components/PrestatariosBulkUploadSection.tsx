@@ -16,17 +16,16 @@ export const PrestatariosBulkUploadSection: React.FC = () => {
     setLoading(true);
     setSummary(null);
     try {
-      const content = await file.text();
-      const result = await cargaMasivaPrestatarios({
-        content,
-        nombre_archivo: file.name,
-        usuario: 'frontend'
-      });
+      const result = await cargaMasivaPrestatarios(file);
       setSummary(
         `Total: ${result.total}, aceptados: ${result.aceptados}, rechazados: ${result.rechazados}`
       );
       const l = await obtenerLogsCargaPrestatarios();
       setLogs(l);
+    } catch (err: any) {
+      // Logs adicionales para depurar problemas de carga (body, formato, etc.)
+      // eslint-disable-next-line no-console
+      console.error('[CARGA-MASIVA FRONT] Error al cargar archivo:', err);
     } finally {
       setLoading(false);
     }
@@ -96,4 +95,3 @@ export const PrestatariosBulkUploadSection: React.FC = () => {
     </Box>
   );
 };
-

@@ -6,6 +6,7 @@ import {
 import {
   getPrestamos,
   getPrestamosPorPrestatario,
+  getMisPrestamos,
   createPrestamo,
   updatePrestamo,
   deletePrestamo,
@@ -21,6 +22,7 @@ interface PrestamosState {
   error?: string;
   fetchAll: () => Promise<void>;
   fetchByPrestatario: (ci: number | string) => Promise<void>;
+  fetchMine: () => Promise<void>;
   create: (payload: CreatePrestamoDto) => Promise<Prestamo | null>;
   update: (id: number, payload: UpdatePrestamoDto) => Promise<Prestamo | null>;
   remove: (id: number) => Promise<void>;
@@ -54,6 +56,20 @@ export const usePrestamosStore = create<PrestamosState>((set, get) => ({
       set({ error: err.message ?? 'Error al cargar préstamos del prestatario', loading: false });
     }
   },
+  async fetchMine() {
+    set({ loading: true, error: undefined });
+    try {
+      const { prestamos, cuotas } = await getMisPrestamos();
+      set({
+        items: prestamos,
+        prestamosPorPrestatario: prestamos,
+        cuotasPorPrestatario: cuotas,
+        loading: false
+      });
+    } catch (err: any) {
+      set({ error: err.message ?? 'Error al cargar mis préstamos', loading: false });
+    }
+  },
   async create(payload) {
     set({ loading: true, error: undefined });
     try {
@@ -82,7 +98,8 @@ export const usePrestamosStore = create<PrestamosState>((set, get) => ({
   async remove(id) {
     set({ loading: true, error: undefined });
     try {
-      await deletePrestamo(id);
+      // Semánticamente cancelar un préstamo es marcar su estado como 'CANCELADO'
+      await updatePrestamo(id, { estado: 'CANCELADO' });
       await get().fetchAll();
       set({ loading: false });
     } catch (err: any) {

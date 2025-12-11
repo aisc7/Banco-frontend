@@ -20,6 +20,7 @@ import RuleIcon from '@mui/icons-material/Rule';
 import BadgeIcon from '@mui/icons-material/Badge';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import HomeIcon from '@mui/icons-material/Home';
@@ -59,7 +60,9 @@ export const MainLayout: React.FC = () => {
       return [
         { to: '/cliente/inicio', label: 'Inicio', icon: <HomeIcon /> },
         { to: '/prestamos', label: 'Mis préstamos', icon: <AccountBalanceIcon /> },
+        { to: '/solicitudes', label: 'Solicitudes', icon: <RuleIcon /> },
         { to: '/notificaciones', label: 'Mis notificaciones', icon: <NotificationsIcon /> },
+        { to: '/cliente/perfil', label: 'Mi perfil', icon: <AccountCircleIcon /> },
         { to: '/ayuda', label: 'Ayuda', icon: <HelpOutlineIcon /> }
       ];
     }
@@ -68,9 +71,11 @@ export const MainLayout: React.FC = () => {
     const items = [
       { to: '/prestatarios', label: 'Prestatarios', icon: <PeopleIcon /> },
       { to: '/prestamos', label: 'Préstamos', icon: <AccountBalanceIcon /> },
+      { to: '/solicitudes/admin', label: 'Solicitudes', icon: <RuleIcon /> },
       { to: '/reportes/resumen-prestamos', label: 'Reportes', icon: <BarChartIcon /> },
       { to: '/notificaciones', label: 'Notificaciones', icon: <NotificationsIcon /> },
       { to: '/auditoria', label: 'Auditoría', icon: <HistoryIcon /> },
+      { to: '/perfil', label: 'Mi perfil', icon: <AccountCircleIcon /> },
       { to: '/ayuda', label: 'Ayuda', icon: <HelpOutlineIcon /> }
     ];
 

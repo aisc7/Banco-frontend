@@ -23,6 +23,10 @@ const AuditoriaPage = lazy(() => import('../../modules/auditoria/pages/Auditoria
 const EmpleadosListPage = lazy(() => import('../../modules/empleados/pages/EmpleadosListPage'));
 const EmpleadoFormPage = lazy(() => import('../../modules/empleados/pages/EmpleadoFormPage'));
 const ClientHomePage = lazy(() => import('../../modules/client/pages/ClientHomePage'));
+const ClientSolicitudesListPage = lazy(() => import('../../modules/solicitudes/pages/ClientSolicitudesListPage'));
+const ClientSolicitudFormPage = lazy(() => import('../../modules/solicitudes/pages/ClientSolicitudFormPage'));
+const EmployeeSolicitudesPage = lazy(() => import('../../modules/solicitudes/pages/EmployeeSolicitudesPage'));
+const ClientePerfilPage = lazy(() => import('../../modules/profile/pages/ClientePerfilPage'));
 
 export const AppRouter: React.FC = () => {
   const user = useAuthStore((s) => s.user);
@@ -95,7 +99,7 @@ export const AppRouter: React.FC = () => {
         <Route
           path="prestamos/nuevo"
           element={
-            <RequireRole allowedRoles={['EMPLEADO', 'ADMIN', 'PRESTATARIO']}>
+            <RequireRole allowedRoles={['PRESTATARIO']}>
               <Suspense fallback={<FullPageLoader />}>
                 <PrestamoFormPage />
               </Suspense>
@@ -203,6 +207,56 @@ export const AppRouter: React.FC = () => {
             <RequireRole allowedRoles={['PRESTATARIO']}>
               <Suspense fallback={<FullPageLoader />}>
                 <ClientHomePage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+        <Route
+          path="cliente/perfil"
+          element={
+            <RequireRole allowedRoles={['PRESTATARIO']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <ClientePerfilPage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+        <Route
+          path="perfil"
+          element={
+            <RequireRole allowedRoles={['PRESTATARIO', 'EMPLEADO', 'ADMIN']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <ClientePerfilPage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+        <Route
+          path="solicitudes"
+          element={
+            <RequireRole allowedRoles={['PRESTATARIO']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <ClientSolicitudesListPage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+        <Route
+          path="solicitudes/nueva"
+          element={
+            <RequireRole allowedRoles={['PRESTATARIO']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <ClientSolicitudFormPage />
+              </Suspense>
+            </RequireRole>
+          }
+        />
+        <Route
+          path="solicitudes/admin"
+          element={
+            <RequireRole allowedRoles={['EMPLEADO', 'ADMIN']}>
+              <Suspense fallback={<FullPageLoader />}>
+                <EmployeeSolicitudesPage />
               </Suspense>
             </RequireRole>
           }

@@ -39,13 +39,7 @@ interface CedulaValidationResponse {
   duplicada: boolean;
 }
 
-interface BulkLoadPayload {
-  content: string;
-  nombre_archivo?: string;
-  usuario?: string;
-}
-
-interface BulkLoadResult {
+export interface BulkLoadResult {
   total: number;
   aceptados: number;
   rechazados: number;
@@ -148,18 +142,50 @@ export async function validarCedula(ci: number | string): Promise<boolean> {
 }
 
 /**
- * POST /api/prestatarios/carga
- * Descripción: Carga masiva de prestatarios desde contenido CSV/TXT.
+ * POST /api/prestatarios/:ci/foto
+ * Descripción: Sube o actualiza la foto de un prestatario usando multipart/form-data.
  * Cuerpo esperado:
- * - content: string (contenido del archivo)
- * - nombre_archivo?: string
- * - usuario?: string
+ * - foto: archivo (campo multipart)
+ * Respuesta esperada:
+ * - ok: true
+ * - result: { updated: true }
+ */
+export async function subirFotoPrestatario(ci: number | string, file: File): Promise<void> {
+  const formData = new FormData();
+  formData.append('foto', file);
+
+  const response = await httpClient.post<ApiResponse<{ updated: boolean }>>(
+    `/api/prestatarios/${ci}/foto`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }
+  );
+  if (!response.data.ok) {
+    throw new Error(response.data.error || 'Error al subir la foto del prestatario');
+  }
+}
+
+/**
+ * POST /api/prestatarios/carga-masiva
+ * Descripción: Carga masiva de prestatarios desde archivo CSV/TXT.
+ * Cuerpo esperado:
+ * - multipart/form-data con campo `archivo`.
  * Respuesta esperada:
  * - ok: true
  * - result: resumen de carga con totales y detalles.
  */
-export async function cargaMasivaPrestatarios(payload: BulkLoadPayload): Promise<BulkLoadResult> {
-  const response = await httpClient.post<ApiResponse<BulkLoadResult>>('/api/prestatarios/carga', payload);
+export async function cargaMasivaPrestatarios(file: File): Promise<BulkLoadResult> {
+  const formData = new FormData();
+  formData.append('archivo', file);
+
+  const response = await httpClient.post<ApiResponse<BulkLoadResult>>(
+    '/api/prestatarios/carga-masiva',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }
+  );
   if (!response.data.ok) {
     throw new Error(response.data.error || 'Error en carga masiva');
   }
@@ -173,10 +199,30 @@ export async function cargaMasivaPrestatarios(payload: BulkLoadPayload): Promise
  * - ok: true
  * - result: arreglo de logs de carga con sus detalles.
  */
-export async function obtenerLogsCargaPrestatarios(): Promise<LoadLog[]> {
-  const response = await httpClient.get<ApiResponse<LoadLog[]>>('/api/prestatarios/obtener-logs-carga');
+export async function obtenerLogsCargaPrestatarios(): Promise<PrestatariosLoadLog[]> {
+  const response = await httpClient.get<ApiResponse<any[]>>('/api/prestatarios/obtener-logs-carga');
   if (!response.data.ok) {
     throw new Error(response.data.error || 'Error al obtener logs de carga');
   }
   return mapPrestatariosLoadLogsFromApi(response.data.result);
+}
+
+// Alias de conveniencia siguiendo la convención del enunciado
+export const listarPrestatarios = getPrestatarios;
+export const obtenerPrestatarioPorCI = getPrestatarioByCi;
+export const crearPrestatario = createPrestatario;
+export const actualizarPrestatario = updatePrestatario;
+export const eliminarPrestatario = deletePrestatario;
+
+/**
+ * GET /api/prestatarios/me
+ * Descripción: Obtiene el perfil del prestatario autenticado, usando id_prestatario del token.
+ * Seguridad: requiere rol PRESTATARIO.
+ */
+export async function getPrestatarioMe(): Promise<Prestatario> {
+  const response = await httpClient.get<ApiResponse<any>>('/api/prestatarios/me');
+  if (!response.data.ok) {
+    throw new Error(response.data.error || 'Error al cargar el perfil del prestatario');
+  }
+  return mapPrestatarioFromApi(response.data.result);
 }

@@ -7,7 +7,7 @@ export const messages = {
     login_help: 'Si no tienes usuario, solicita tu registro a un funcionario de la entidad.',
     prestatarios_title: 'Prestatarios',
     prestatarios_empty: 'No hay prestatarios registrados.',
-    prestamos_title: 'Préstamos y solicitudes',
+    prestamos_title: 'Préstamos',
     prestamos_new_button: 'Solicitar nuevo préstamo'
   }
 } as const;

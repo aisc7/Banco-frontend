@@ -15,6 +15,8 @@ import { useForm } from 'react-hook-form';
 import { usePrestamosStore } from '../store/usePrestamosStore';
 import { useAuthStore } from '../../auth/store/useAuthStore';
 import { AppButton } from '../../../shared/components/ui/AppButton';
+import { useSolicitudesStore } from '../../solicitudes/store/useSolicitudesStore';
+import { useNotificationStore } from '../../../app/store/useNotificationStore';
 
 interface PrestamoFormValues {
   id_prestatario?: number;
@@ -25,8 +27,10 @@ interface PrestamoFormValues {
 
 export const PrestamoFormPage: React.FC = () => {
   const navigate = useNavigate();
-  const { create, loading, error: serverError } = usePrestamosStore();
+  const { create: createPrestamo, loading, error: serverError } = usePrestamosStore();
+  const { create: createSolicitud } = useSolicitudesStore();
   const user = useAuthStore((s) => s.user);
+  const { enqueue } = useNotificationStore();
   const role = user?.role;
   const isPrestatario = role === 'PRESTATARIO';
   const isEmpleado = role === 'EMPLEADO' || role === 'ADMIN';
@@ -45,9 +49,29 @@ export const PrestamoFormPage: React.FC = () => {
   });
 
   const onSubmit = async (values: PrestamoFormValues) => {
+    const monto = Number(values.monto);
+    const nroCuotas = Number(values.nro_cuotas);
+
+    if (isPrestatario) {
+      // Cliente PRESTATARIO: registra una solicitud de préstamo, no un préstamo directo.
+      const res = await createSolicitud({
+        monto,
+        nro_cuotas: nroCuotas
+      });
+      if (res) {
+        enqueue(
+          'Tu solicitud fue registrada. Un empleado la revisará y te notificaremos cuando sea aprobada.',
+          'success'
+        );
+        navigate('/solicitudes');
+      }
+      return;
+    }
+
+    // Empleado/Admin: pueden crear préstamos directamente asociados a un prestatario.
     const basePayload: any = {
-      monto: Number(values.monto),
-      nro_cuotas: Number(values.nro_cuotas)
+      monto,
+      nro_cuotas: nroCuotas
     };
 
     if (!isPrestatario) {
@@ -55,7 +79,7 @@ export const PrestamoFormPage: React.FC = () => {
       basePayload.id_prestatario = values.id_prestatario;
     }
 
-    const created = await create(basePayload);
+    const created = await createPrestamo(basePayload);
     if (created) {
       navigate(`/prestamos/${created.id}`);
     }

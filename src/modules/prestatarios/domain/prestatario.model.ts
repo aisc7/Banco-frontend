@@ -11,6 +11,8 @@ export interface Prestatario {
   estadoCliente: string;
   fechaRegistro: string;
   usuarioRegistro: string;
+  // Foto del prestatario en base64 (opcional, usada en el perfil)
+  fotoBase64?: string | null;
 }
 
 export interface PrestatariosLoadLog {
@@ -35,7 +37,8 @@ export function mapPrestatarioFromApi(raw: any): Prestatario {
     fechaNacimiento: raw.FECHA_NACIMIENTO ?? raw.fecha_nacimiento,
     estadoCliente: raw.ESTADO_CLIENTE ?? raw.estado_cliente,
     fechaRegistro: raw.FECHA_REGISTRO ?? raw.fecha_registro,
-    usuarioRegistro: raw.USUARIO_REGISTRO ?? raw.usuario_registro
+    usuarioRegistro: raw.USUARIO_REGISTRO ?? raw.usuario_registro,
+    fotoBase64: raw.FOTO_BASE64 ?? raw.foto_base64 ?? raw.fotoBase64 ?? null
   };
 }
 
@@ -54,4 +57,3 @@ export function mapPrestatariosLoadLogsFromApi(rawList: any[] | null | undefined
     detalles: raw.detalles ?? raw.DETALLES ?? []
   }));
 }
-

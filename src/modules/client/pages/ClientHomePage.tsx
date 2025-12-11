@@ -68,7 +68,7 @@ const ClientHomePage: React.FC = () => {
             </Button>
             <Button
               variant="outlined"
-              onClick={() => navigate('/prestamos/nuevo')}
+              onClick={() => navigate('/solicitudes')}
             >
               Solicitar nuevo préstamo
             </Button>
@@ -86,4 +86,3 @@ const ClientHomePage: React.FC = () => {
 };
 
 export default ClientHomePage;
-

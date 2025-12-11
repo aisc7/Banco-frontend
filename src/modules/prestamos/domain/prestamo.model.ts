@@ -3,6 +3,8 @@ export interface Prestamo {
   id: number;
   idSolicitudPrestamo: number;
   idPrestatario: number;
+  ci?: number | null;
+  nombrePrestatario?: string | null;
   totalPrestado: number;
   nroCuotas: number;
   interes: number;
@@ -25,6 +27,11 @@ export function mapPrestamoFromApi(raw: any): Prestamo {
     id: raw.ID_PRESTAMO ?? raw.id_prestamo,
     idSolicitudPrestamo: raw.ID_SOLICITUD_PRESTAMO ?? raw.id_solicitud_prestamo,
     idPrestatario: raw.ID_PRESTATARIO ?? raw.id_prestatario,
+    ci: raw.CI ?? raw.ci ?? null,
+    nombrePrestatario:
+      raw.NOMBRE_PRESTATARIO ??
+      raw.nombre_prestatario ??
+      (raw.NOMBRE && raw.APELLIDO ? `${raw.NOMBRE} ${raw.APELLIDO}` : null),
     totalPrestado: raw.TOTAL_PRESTADO ?? raw.total_prestado,
     nroCuotas: raw.NRO_CUOTAS ?? raw.nro_cuotas,
     interes: raw.INTERES ?? raw.interes,
@@ -52,4 +59,3 @@ export function mapCuotaResumenFromApi(raw: any): CuotaResumen {
 export function mapCuotasResumenFromApi(rawList: any[] | null | undefined): CuotaResumen[] {
   return (rawList || []).map(mapCuotaResumenFromApi);
 }
-

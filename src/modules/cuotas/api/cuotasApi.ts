@@ -18,6 +18,12 @@ export interface RegistrarPagoCuotaResult {
   prestamo: any | null;
 }
 
+export interface EstadoMorosoResult {
+  id_prestatario: number;
+  vencidasImpagas: number;
+  estado: 'MOROSO' | 'ACTIVO';
+}
+
 /**
  * GET /api/cuotas/pendientes
  * Descripción: Lista cuotas pendientes (vista VW_CUOTAS_PENDIENTES).
@@ -69,6 +75,23 @@ export async function registrarPagoCuota(
   );
   if (!response.data.ok) {
     throw new Error(response.data.error || 'Error al registrar pago de cuota');
+  }
+  return response.data.result;
+}
+
+/**
+ * GET /api/cuotas/prestatarios/:id/estado-moroso
+ * Descripción: Obtiene el estado de morosidad derivado de un prestatario.
+ * Respuesta esperada:
+ * - ok: true
+ * - result: { id_prestatario, vencidasImpagas, estado }
+ */
+export async function getEstadoMorosoPrestatario(idPrestatario: number): Promise<EstadoMorosoResult> {
+  const response = await httpClient.get<ApiResponse<EstadoMorosoResult>>(
+    `/api/cuotas/prestatarios/${idPrestatario}/estado-moroso`
+  );
+  if (!response.data.ok) {
+    throw new Error(response.data.error || 'Error al obtener estado moroso del prestatario');
   }
   return response.data.result;
 }
