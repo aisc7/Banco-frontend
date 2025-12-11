@@ -86,3 +86,4 @@ export async function finalizarSesion(id_audit: number): Promise<void> {
     throw new Error(response.data.error || 'Error al finalizar sesión de auditoría');
   }
 }
+

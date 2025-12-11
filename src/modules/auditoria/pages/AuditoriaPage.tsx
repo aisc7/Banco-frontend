@@ -121,3 +121,4 @@ export const AuditoriaPage: React.FC = () => {
 };
 
 export default AuditoriaPage;
+

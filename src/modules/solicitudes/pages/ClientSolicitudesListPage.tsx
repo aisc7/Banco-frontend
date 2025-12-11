@@ -144,6 +144,8 @@ const NuevaSolicitudDialog: React.FC<NuevaSolicitudDialogProps> = ({ open, onClo
 export const ClientSolicitudesListPage: React.FC = () => {
   const { misSolicitudes, loading, error, fetchMisSolicitudes } = useSolicitudesStore();
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Filtro por defecto: PENDIENTE (aunque la vista cliente no filtra, se deja preparado)
+  const [estadoFilter] = useState<'PENDIENTE' | ''>('PENDIENTE');
 
   useEffect(() => {
     fetchMisSolicitudes().catch(() => undefined);
@@ -223,6 +225,22 @@ export const ClientSolicitudesListPage: React.FC = () => {
         <AppTable
           columns={[
             { key: 'id', header: 'ID solicitud' },
+            {
+              key: 'prestatario',
+              header: 'Prestatario',
+              render: (row: any) => {
+                const s = row;
+                const baseNombre =
+                  s.nombrePrestatario ||
+                  `${s.prest_nombre ?? ''} ${s.prest_apellido ?? ''}`.trim();
+                if (baseNombre) {
+                  return s.prest_ci ? `${baseNombre} (CC ${s.prest_ci})` : baseNombre;
+                }
+                return s.id_prestatario || s.idPrestatario
+                  ? `ID ${s.id_prestatario || s.idPrestatario}`
+                  : '—';
+              }
+            },
             {
               key: 'monto',
               header: 'Monto',

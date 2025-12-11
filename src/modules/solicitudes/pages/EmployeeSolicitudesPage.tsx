@@ -66,6 +66,11 @@ export const EmployeeSolicitudesPage: React.FC = () => {
   const handleAprobar = async (sol: Solicitud) => {
     const res = await aprobar(sol.id);
     if (res && res.prestamo) {
+  
+  // Debug: mostrar en consola las solicitudes de refinanciación
+  React.useEffect(() => {
+    console.log('Solicitudes de refinanciación:', refiItems);
+  }, [refiItems]);
       const idPrestamo = res.prestamo.id_prestamo;
       enqueue(
         `Solicitud de préstamo aprobada. Se generó el préstamo #${idPrestamo} y sus cuotas asociadas.`,
@@ -137,6 +142,9 @@ export const EmployeeSolicitudesPage: React.FC = () => {
 
   const handleRefreshRefi = () => {
     loadRefinanciacionesPendientes().catch(() => undefined);
+            <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+              Mostrando {refiItems.length} solicitudes de refinanciación
+            </Typography>
   };
 
   const handleAprobarRefi = async (sol: SolicitudRefinanciacion) => {
@@ -233,7 +241,22 @@ export const EmployeeSolicitudesPage: React.FC = () => {
           <AppTable
             columns={[
               { key: 'id', header: 'ID solicitud' },
-              { key: 'idPrestatario', header: 'ID prestatario' },
+              {
+                key: 'prestatario',
+                header: 'Prestatario',
+                render: (row: any) => {
+                  const s = row as Solicitud;
+                  const baseNombre =
+                    s.nombrePrestatario ||
+                    `${s.prest_nombre ?? ''} ${s.prest_apellido ?? ''}`.trim();
+                  if (baseNombre) {
+                    return s.prest_ci ? `${baseNombre} (CC ${s.prest_ci})` : baseNombre;
+                  }
+                  return s.id_prestatario || s.idPrestatario
+                    ? `ID ${s.id_prestatario || s.idPrestatario}`
+                    : '—';
+                }
+              },
               { key: 'idEmpleado', header: 'ID empleado' },
               {
                 key: 'monto',
@@ -348,17 +371,37 @@ export const EmployeeSolicitudesPage: React.FC = () => {
         {!refiLoading && refiItems.length > 0 && (
           <AppTable
             columns={[
-              { key: 'id_solicitud_refinanciacion', header: 'ID solicitud' },
-              { key: 'id_prestamo', header: 'ID préstamo' },
-              { key: 'id_prestatario', header: 'ID prestatario' },
+              { key: 'id', header: 'ID solicitud' },
+              { key: 'idPrestatario', header: 'ID prestatario' },
               {
-                key: 'nro_cuotas',
-                header: 'Nuevo número de cuotas'
+                key: 'prestatario',
+                header: 'Prestatario',
+                render: (row: any) => {
+                  const s = row;
+                  const baseNombre =
+                    s.nombrePrestatario ||
+                    `${s.prest_nombre ?? ''} ${s.prest_apellido ?? ''}`.trim();
+                  if (baseNombre) {
+                    return s.prest_ci ? `${baseNombre} (CC ${s.prest_ci})` : baseNombre;
+                  }
+                  return s.id_prestatario || s.idPrestatario
+                    ? `ID ${s.id_prestatario || s.idPrestatario}`
+                    : '—';
+                }
               },
               {
-                key: 'fecha_realizacion',
+                key: 'monto',
+                header: 'Monto',
+                render: (row: any) => formatCurrencyCOP(row.monto)
+              },
+              {
+                key: 'nroCuotas',
+                header: 'Número de cuotas'
+              },
+              {
+                key: 'fechaEnvio',
                 header: 'Fecha solicitud',
-                render: (row: any) => formatDate(row.fecha_realizacion)
+                render: (row: any) => row.fechaEnvio ? formatDate(row.fechaEnvio) : '-'
               },
               {
                 key: 'acciones',
